@@ -6,74 +6,56 @@ import axios from "axios";
 import { FaMoon, FaSun } from "react-icons/fa";
 
 const App = () => {
-  const [genre, setGenre] = useState(""); // Selected genre
+  // console.log("API Key:", process.env.REACT_APP_OPENAI_API_KEY);
   const [selectedGenre, setSelectedGenre] = useState("");
   const [wordCount, setWordCount] = useState(300); // Default word count
   const [story, setStory] = useState(""); // Generated story
   const [error, setError] = useState(null); // Error handling
   const [theme, setTheme] = useState("light"); // Light or dark theme
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   // Function to handle story generation
-  // const generateStory = async () => {
-  //   setError(null); // Clear previous errors
-  //   setStory(""); // Clear previous story
-
-  //   if (!selectedGenre) {
-  //     alert("Please select a genre");
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await axios.post(
-  //       "https://api.openai.com/v1/completions",
-  //       {
-  //         model: "gpt-3.5-turbo",
-  //         prompt: `Write a short story in the ${genre} genre with around ${wordCount} words.`,
-  //         max_tokens: Math.min(wordCount, 500),
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-  //         },
-  //       }
-  //     );
-
-  //     setStory(response.data.choices[0].text.trim());
-  //   } catch (err) {
-  //     setError("Failed to generate story. Please try again.");
-  //   }
-  // };
-
   const generateStory = async () => {
-    setError(null); // Clear previous errors
-    setStory(""); // Clear previous story
-  
-    if (!selectedGenre) {
-      alert("Please select a genre");
-      return;
-    }
-  
-    // Define the word count (this can be dynamic based on your slider value)
-    const wordCount = 200; // Adjust this as per your slider or state
-  
+    // Reset previous states
+    setStory("");
+    setError(null);
+    setIsLoading(true);
+
     try {
+      // Make sure to replace with your actual OpenAI API key
       const response = await axios.post(
-        "https://api.openai.com/v1/completions",
+        "https://api.openai.com/v1/chat/completions",
         {
           model: "gpt-3.5-turbo",
-          prompt: `Write a short story in the ${selectedGenre} genre with around ${wordCount} words.`,
-          max_tokens: Math.min(wordCount, 500), // Ensure the word count doesn't exceed 500 tokens
+          messages: [
+            {
+              role: "system",
+              content: "You are a creative storyteller who generates short stories."
+            },
+            {
+              role: "user",
+              content: `Write a ${wordCount}-word short story in the ${selectedGenre} genre. The story should be engaging and have a clear narrative arc.`
+            }
+          ],
+          max_tokens: wordCount + 50, // Slight buffer for potential overflow
+          temperature: 0.7 // Creativity level
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-          },
+            "Authorization": `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+          }
         }
       );
-  
-      setStory(response.data.choices[0].text.trim());
+
+      // Extract the generated story
+      const generatedStory = response.data.choices[0].message.content.trim();
+      setStory(generatedStory);
     } catch (err) {
-      setError("Failed to generate story. Please try again.");
+      console.error("Error generating story:", err);
+      setError(err.response?.data?.error?.message || "Failed to generate story. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,7 +118,7 @@ const App = () => {
         </div>
 
         {/* Generate Story Button */}
-        <div className="relative text-center">
+        {/* <div className="relative text-center">
           <div className="absolute z-0 inset-0 flex items-center justify-center">
             <div className="w-full max-w-[calc(100%-2rem)] sm:max-w-[200px] h-full bg-gradient-to-r from-yellow-400 via-pink-500 to-green-600 opacity-80 blur-lg rounded-xl"></div>
           </div>
@@ -156,22 +138,39 @@ const App = () => {
           >
             Generate Story
           </button>
+        </div> */}
+
+        {/* Generate Story Button */}
+        <div className="relative text-center">
+          <div className="absolute z-0 inset-0 flex items-center justify-center">
+            <div className="w-full max-w-[calc(100%-2rem)] sm:max-w-[200px] h-full bg-gradient-to-r from-yellow-400 via-pink-500 to-green-600 opacity-80 blur-lg rounded-xl"></div>
+          </div>
+          <button
+            onClick={() => {
+              if (!selectedGenre) {
+                alert("Please select a genre");
+                return;
+              }
+              generateStory();
+            }}
+            disabled={isLoading}
+            className={`relative z-10 inline-flex items-center justify-center w-full px-8 py-3 text-lg font-bold transition-all duration-200 sm:w-auto rounded-xl border-2 border-transparent ${
+              theme === "light"
+                ? "bg-gray-900 text-white hover:bg-gray-600 focus:ring-gray-900"
+                : "bg-gray-200 text-black hover:bg-gray-300 focus:ring-gray-700"
+            } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {isLoading ? "Generating..." : "Generate Story"}
+          </button>
         </div>
 
         {/* Story Display */}
-        <StoryDisplay story={story} error={error} />
+        <div style={{ margin: "3rem 0" }}>
+          <StoryDisplay story={story} error={error} theme={theme} />
+        </div>
 
-        {/* Copy Story */}
-        {story && (
-          <div className="text-center mt-4">
-            <button
-              onClick={() => navigator.clipboard.writeText(story)}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Copy Story
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
