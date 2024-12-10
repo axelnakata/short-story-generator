@@ -32,23 +32,25 @@ const App = () => {
       return;
     }
   
-    // Reset states
+    // Reset the story and error states, and set loading state
     setStory("");
     setError(null);
     setIsLoading(true);
   
     try {
-      // Make the API call
+      // Make the API call to OpenAI with necessary headers and payload
       const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
+        "https://api.openai.com/v1/chat/completions", // OpenAI API endpoint
         {
-          model: "gpt-3.5-turbo",
+          model: "gpt-3.5-turbo", // Model to use for story generation as required in the documents given
           messages: [
             {
+              // System message to guide model
               role: "system",
               content: "You are a creative storyteller who generates short stories."
             },
             {
+              // User prompt to generate story
               role: "user",
               content: `Write a ${wordCount}-word short story in the ${selectedGenre} genre. The story should be engaging and have a clear narrative arc.`
             }
@@ -58,8 +60,8 @@ const App = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-            "Content-Type": "application/json"
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`, // Authorization with API key
+            "Content-Type": "application/json" // Content type for the API request
           }
         }
       );
@@ -67,14 +69,14 @@ const App = () => {
       // Extract and handle the response
       const generatedStory = response.data.choices?.[0]?.message?.content?.trim();
       if (generatedStory) {
-        setStory(generatedStory);
+        setStory(generatedStory); // Set the generated story if successful
       } else {
-        throw new Error("No story content found in response.");
+        throw new Error("No story content found in response."); // Handle empty responses
       }
     } catch (err) {
       console.error("Error generating story:", err);
   
-      // Handle different types of errors
+      // Handle different error scenarios with user-friendly messages
       if (err.response?.status === 429) {
         setError("Rate limit exceeded. Please wait and try again.");
       } else if (err.response?.status === 500) {

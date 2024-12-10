@@ -59,6 +59,7 @@ const StoryDisplay = ({ story, error, theme }) => {
       >
         <p className="whitespace-pre-line leading-relaxed">{story}</p>
         <div className="mt-4 flex justify-center space-x-4">
+          
           {/* Copy Button */}
           <button
             onClick={() => navigator.clipboard.writeText(story)}

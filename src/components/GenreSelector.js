@@ -1,6 +1,7 @@
 import React from "react";
 
 const GenreSelector = ({ selectedGenre, setSelectedGenre }) => {
+  // List of available genres to choose from
   const genres = ["Fantasy", "Sci-Fi", "Horror", "Romance", "Adventure"];
 
   return (
@@ -10,17 +11,19 @@ const GenreSelector = ({ selectedGenre, setSelectedGenre }) => {
           key={genre}
           href="#"
           onClick={(e) => {
-            e.preventDefault(); // Prevent page reload
-            setSelectedGenre(genre); // Change the selected genre
+            e.preventDefault(); /// Prevent the page from reloading when a genre is clicked
+            setSelectedGenre(genre); // Set the selected genre when clicked
           }}
           className="relative inline-block"
         >
+
           {/* Outer shadow effect */}
           <span
             className={`absolute top-0 left-0 mt-1 ml-1 h-full w-full rounded ${
               selectedGenre === genre ? "bg-gray-900" : "bg-white"
             }`}
           ></span>
+
           {/* Elevated button */}
           <span
             className={`relative inline-block h-full w-full rounded border-2 ${
@@ -29,6 +32,7 @@ const GenreSelector = ({ selectedGenre, setSelectedGenre }) => {
                 : "border-black bg-white text-black hover:bg-yellow-400 hover:text-gray-900"
             } px-3 py-1 text-base font-bold transition duration-100 hover:bg-yellow-400 hover:text-gray-900`}
           >
+            
             {genre}
           </span>
         </a>

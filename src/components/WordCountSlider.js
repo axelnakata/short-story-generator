@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 
 const WordCountSlider = ({ wordCount, setWordCount, theme }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const marks = [100,300, 500];
-  const isDarkMode = theme === "dark";
+  const [isHovered, setIsHovered] = useState(false); // State to track if slider is being hovered
+  const marks = [100,300, 500]; // Predefined word count marks for the slider
+  const isDarkMode = theme === "dark"; // Check if dark mode is enabled
 
   return (
     <div
       className="space-y-4 relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsHovered(true)} // Show the word count bubble when hovered
+      onMouseLeave={() => setIsHovered(false)} // Hide the word count bubble when not hovered
     >
       {/* Slider */}
       <div className="relative px-6 w-full">
@@ -68,7 +68,7 @@ const WordCountSlider = ({ wordCount, setWordCount, theme }) => {
         `}</style>
       </div>
 
-      {/* Marks */}
+      {/* Marks to display predefined marks on the slider */}
       <div className="flex justify-between mt-2 text-xs">
         {marks.map((mark) => (
           <span
