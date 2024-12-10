@@ -126,7 +126,14 @@ const App = () => {
         <GenreSelector selectedGenre={selectedGenre} setSelectedGenre={setSelectedGenre} />
 
         {/* Word Count Slider */}
-        <WordCountSlider wordCount={wordCount} setWordCount={setWordCount} />
+        <div style={{ marginTop: '7.5vh', marginBottom: '5vh' }}>
+          {/* Word Count Slider */}
+          <WordCountSlider
+            wordCount={wordCount}
+            setWordCount={setWordCount}
+            theme={theme}
+          />
+        </div>
 
         {/* Generate Story Button */}
         <div className="relative text-center">
