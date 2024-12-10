@@ -5,19 +5,36 @@ import { jsPDF } from "jspdf";
 const StoryDisplay = ({ story, error, theme }) => {
   const handleSaveAsPDF = () => {
     const doc = new jsPDF();
-
-    // Add some padding and wrap text
+  
+    // Define margins and usable width
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margins = 10; // Margin on each side
     const usableWidth = pageWidth - margins * 2;
-
-    // Split the text into lines based on the usable width
+    const lineHeight = 10; // Space between lines
+    const usableHeight = pageHeight - margins * 2;
+  
+    // Split text into lines based on the usable width
     const lines = doc.splitTextToSize(story, usableWidth);
-
-    // Write text to the PDF with padding
-    doc.text(lines, margins, margins + 10); // Add vertical padding
+  
+    let cursorY = margins;
+  
+    // Loop through each line and handle page breaks
+    lines.forEach((line) => {
+      if (cursorY + lineHeight > usableHeight) {
+        // If the line exceeds the current page, add a new page
+        doc.addPage();
+        cursorY = margins; // Reset cursor again to top margin
+      }
+  
+      // Add the line to the PDF
+      doc.text(line, margins, cursorY);
+      cursorY += lineHeight; // Move cursor down for the next line
+    });
+  
+    // Save the PDF file
     doc.save("short_story.pdf");
-  };
+  };  
 
   if (error) {
     return (

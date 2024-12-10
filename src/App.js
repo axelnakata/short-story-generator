@@ -6,23 +6,39 @@ import axios from "axios";
 import { FaMoon, FaSun } from "react-icons/fa";
 
 const App = () => {
-  // console.log("API Key:", process.env.REACT_APP_OPENAI_API_KEY);
-  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState(""); // Track selected genre
   const [wordCount, setWordCount] = useState(300); // Default word count
   const [story, setStory] = useState(""); // Generated story
   const [error, setError] = useState(null); // Error handling
   const [theme, setTheme] = useState("light"); // Light or dark theme
   const [isLoading, setIsLoading] = useState(false); // Loading state
 
+  let lastApiCallTime = 0; // Global variable to track the last API call time
+  const RATE_LIMIT_SECONDS = 5; // Cooldown time between requests
+
   // Function to handle story generation
   const generateStory = async () => {
-    // Reset previous states
+    const currentTime = Date.now();
+  
+    // Rate Limiting: Ensure enough time has passed since the last API call
+    if (currentTime - lastApiCallTime < RATE_LIMIT_SECONDS * 1000) {
+      setError(`Please wait ${RATE_LIMIT_SECONDS} seconds between requests.`);
+      return;
+    }
+  
+    // Validate inputs before making the API call
+    if (!selectedGenre || wordCount < 100 || wordCount > 500) {
+      setError("Please select a valid genre and word count (100-500).");
+      return;
+    }
+  
+    // Reset states
     setStory("");
     setError(null);
     setIsLoading(true);
-
+  
     try {
-      // Make sure to replace with your actual OpenAI API key
+      // Make the API call
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -37,25 +53,40 @@ const App = () => {
               content: `Write a ${wordCount}-word short story in the ${selectedGenre} genre. The story should be engaging and have a clear narrative arc.`
             }
           ],
-          max_tokens: wordCount + 50, // Slight buffer for potential overflow
-          temperature: 0.7 // Creativity level
+          max_tokens: Math.min(wordCount * 2, 2048), // Efficiently handle token count
+          temperature: 0.7 // Adjust creativity level
         },
         {
           headers: {
-            "Authorization": `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
             "Content-Type": "application/json"
           }
         }
       );
-
-      // Extract the generated story
-      const generatedStory = response.data.choices[0].message.content.trim();
-      setStory(generatedStory);
+  
+      // Extract and handle the response
+      const generatedStory = response.data.choices?.[0]?.message?.content?.trim();
+      if (generatedStory) {
+        setStory(generatedStory);
+      } else {
+        throw new Error("No story content found in response.");
+      }
     } catch (err) {
       console.error("Error generating story:", err);
-      setError(err.response?.data?.error?.message || "Failed to generate story. Please try again.");
+  
+      // Handle different types of errors
+      if (err.response?.status === 429) {
+        setError("Rate limit exceeded. Please wait and try again.");
+      } else if (err.response?.status === 500) {
+        setError("Server error. Please try again later.");
+      } else if (err.message === "Network Error") {
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError(err.response?.data?.error?.message || "An error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
+      lastApiCallTime = Date.now(); // Update the last API call time
     }
   };
 
@@ -116,29 +147,6 @@ const App = () => {
             theme={theme}
           />
         </div>
-
-        {/* Generate Story Button */}
-        {/* <div className="relative text-center">
-          <div className="absolute z-0 inset-0 flex items-center justify-center">
-            <div className="w-full max-w-[calc(100%-2rem)] sm:max-w-[200px] h-full bg-gradient-to-r from-yellow-400 via-pink-500 to-green-600 opacity-80 blur-lg rounded-xl"></div>
-          </div>
-          <button
-            onClick={() => {
-              if (!selectedGenre) {
-                alert("Please select a genre");
-                return;
-              }
-              generateStory();
-            }}
-            className={`relative z-10 inline-flex items-center justify-center w-full px-8 py-3 text-lg font-bold transition-all duration-200 sm:w-auto rounded-xl border-2 border-transparent ${
-              theme === "light"
-                ? "bg-gray-900 text-white hover:bg-gray-600 focus:ring-gray-900"
-                : "bg-gray-200 text-black hover:bg-gray-300 focus:ring-gray-700"
-            } focus:outline-none focus:ring-2 focus:ring-offset-2`}
-          >
-            Generate Story
-          </button>
-        </div> */}
 
         {/* Generate Story Button */}
         <div className="relative text-center">
